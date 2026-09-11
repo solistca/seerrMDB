@@ -5,7 +5,7 @@
 > personal side task, so a future Claude Code session can pick it up with no
 > lost context. It is not part of Seerr's product documentation.
 
-## Status: NOT STARTED (research not yet run, no .ics file produced yet)
+## Status: DONE for Wrexham AFC 2026-27 (`.ics` generated and delivered)
 
 ## Background
 
@@ -111,17 +111,32 @@ type in this environment.
 - `CLAUDE.md` added to this repo (separate, unrelated task) — committed as
   `5000cfc`.
 
-## Work NOT completed — next steps for whoever picks this up
+## Work completed — Wrexham AFC run (this session)
 
-1. Run the Wrexham AFC fixture research (via the `sports-schedule-researcher`
-   agent if available in the working environment, otherwise a one-off agent
-   using the brief in this document) and produce the JSON described above.
-2. Build the `.ics` file from that JSON per the requirements above
-   (Pacific-time `VTIMEZONE`, TBD matches as all-day events, no `VALARM`).
-3. Validate the `.ics` is well-formed (BEGIN/END VCALENDAR, VTIMEZONE block,
-   one VEVENT per match, correct TZID/line-folding).
-4. Deliver the file to the user, noting any TBD-time matches and that it's a
-   point-in-time snapshot (kickoffs can shift for TV scheduling).
-5. Repeat the same two-step process for any future team the user requests
-   (Chicago Bears, Manchester United, etc.) — only the Step 1 brief
-   (team/sport/season/competitions) changes.
+1. Ran Step 1 research via a one-off `general-purpose` Agent using the brief
+   above. Output saved as `wrexham-afc-2026-27-fixtures.json` (Step 1/Step 2
+   interface data, matches the schema). 47 matches found across EFL
+   Championship, FA Cup, and EFL Cup, each cross-verified against 2-3
+   independent sources (club site, Wikipedia, BBC/Sky/ESPN/SI.com, EFL.com).
+   Two undetermined items recorded (FA Cup 3rd Round opponent — draw not yet
+   made; possible play-off matches, contingent on final league position).
+   No TBD-time matches in this run — every dated match already had a
+   confirmed kickoff.
+2. Built `build_ics.py` — sport-agnostic Step 2 script implementing all
+   requirements: converts each UK-local kickoff to `America/Los_Angeles` via
+   `zoneinfo` (no hand-computed offset), embeds a standard `VTIMEZONE`
+   PST/PDT block, emits TBD matches as all-day `VALUE=DATE` events, no
+   `VALARM` blocks, RFC5545 line folding.
+3. Validated the output by parsing it with the Python `icalendar` library:
+   47 events, balanced BEGIN/END VEVENT, VTIMEZONE present, zero VALARM.
+   Spot-checked the Oct 30 2026 fixture (UK already back to GMT, US still on
+   PDT — the exact DST-mismatch case called out in requirement 4) and
+   confirmed the Pacific offset is correct (7 hours, not a naive 8).
+4. Delivered `wrexham-afc-2026-27.ics` to the user.
+
+## Next steps for a future run (Chicago Bears, Man Utd, etc.)
+
+Only Step 1 changes: give the `general-purpose` Agent a new brief (team,
+sport, season, competitions) using the same brief template as this run, save
+the resulting JSON, then re-run `python3 build_ics.py <json> <output.ics>` —
+Step 2 is unchanged and sport-agnostic.
